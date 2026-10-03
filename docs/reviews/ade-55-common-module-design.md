@@ -2,6 +2,8 @@
 
 상태: **제안 / 강석현 착수 검토 대기**. 현재 승인된 방법·스키마·기존 함수·실제 샘플은 확보하지 못했다. 계산 코드는 작성하지 않았다. 이 문서는 ADE-54 설계 문서 커밋을 선행 기준으로 하는 별도 ADE-55 검토 브랜치에서 추가했다.
 
+이번 수정본은 원래 두 브랜치를 보존한 `codex/ade-54-ade-55-migration-review`에서 검토했다. 공식 팀 저장소로의 이관은 아직 수행하지 않았다. 공유 필드·단위·출처 구조·오류 코드는 공통 계약 문서를 기준으로 참조하며, 이 문서는 방법별 추가 조건과 검증 가정만 상세히 정의한다.
+
 ## 인터페이스와 단계 분리
 
 [공통 규격 제안](common-contract-proposal.md)에 따라 장비 adapter → 공통 입력 validator → preprocess → segment → camera Point Cloud → volume estimator → 공통 결과 serializer를 분리한다. 함수명·패키지 구조·의존성은 실제 저장소 확보 후 기존 인터페이스를 우선 재사용한다.
@@ -21,12 +23,12 @@
 
 ### 방법별 추가 입력 (제안)
 
-이 방법에는 공통 입력 외에 `volume_request`가 필요하다.
+공통 계약의 선택적 `volume_request`를 이 부피 방법에 대해 아래처럼 확장한다. 부피를 요청하지 않은 ADE-54 입력 변환 단계에는 이 조건들을 요구하지 않는다.
 
 | 필드 | 제안 |
 | --- | --- |
 | `method` | `support_plane_height_integral` |
-| `plane_basis` | 카메라 좌표에서 평면 원점 o(m), 직교 단위 축 e1,e2와 대상 방향 단위 법선 n. `n·p + offset_m = 0`과 일관성 검증 |
+| `plane_basis` | 카메라 좌표에서 평면 원점 o(m), 직교 단위 축 e1,e2와 대상 방향 단위 법선 n. o 및 평면 위 점은 `n·p + offset_m = 0`을 만족해야 함. 물체 윗면 점에 이 평면식을 요구하지 않음 |
 | `footprint` | 평면 좌표의 승인된 polygon(m) 또는 고정 grid mask, 외곽/구멍·출처·검증 상태 명시. 단순 이미지 마스크를 전체 실제 footprint로 단정하지 않음 |
 | `grid` | 원점·셀 간격(m)·해상도·경계 셀 면적 처리·셀 집계 방식 |
 | `assumptions_confirmed` | 대상/촬영 프로토콜의 height field 적용 근거, 완전 윗면 관측 근거 |
@@ -46,7 +48,7 @@
 
 ### 실패 정책
 
-공통 오류 목록에 `FOOTPRINT_REQUIRED`, `PLANE_BASIS_INVALID`, `VOLUME_NONPOSITIVE`를 제안한다. 마스크 없음, 지지 평면 없음, 대상점 없음, 내부 파라미터 없음, 좌표/단위 모호함, 가려진 윗면, 열린 표면으로만 주어진 입력, footprint 미확인, required 셀 부족은 `status=failure,volume=null`과 구체적 원인으로 출력한다. 검증되지 않은 pose/sync를 사용하는 world 정규화 요청도 실패한다. 실패한 계산의 Point Cloud가 이미 생성됐다면 진단 산출물로 남길 수 있으나 부피 성공으로 표시하지 않는다.
+오류 코드 정의는 공통 계약의 오류 표에 모았다. 마스크 없음, 지지 평면 없음, 대상점 없음, 내부 파라미터 없음, 좌표/단위 모호함, 가려진 윗면, 열린 표면으로만 주어진 입력, footprint 미확인, required 셀 부족은 `status=failure,volume=null`과 구체적 원인으로 출력한다. 검증되지 않은 pose/sync를 사용하는 world 정규화 요청도 실패한다. 실패한 계산의 Point Cloud가 이미 생성됐다면 진단 산출물로 남길 수 있으나 부피 성공으로 표시하지 않는다.
 
 ## 검증 계획 (승인 후)
 
@@ -85,7 +87,7 @@
     "method": "support_plane_height_integral",
     "assumptions": ["known footprint", "complete observed top surface", "solid height field"]
   },
-  "quality": {"provenance": "synthetic", "required_cells": 20, "observed_cells": 20, "coverage": 1.0, "sync": "unverified"},
+  "quality": {"provenance": {"kind": "synthetic", "source": "문서의 합성 높이 grid 기대값"}, "required_cells": 20, "observed_cells": 20, "coverage": 1.0, "sync": "unverified"},
   "errors": [],
   "warnings": ["합성 기대값; 실제 장비·시간 동기화·중량 정확도 미검증"]
 }

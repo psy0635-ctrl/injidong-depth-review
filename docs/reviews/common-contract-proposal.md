@@ -11,6 +11,7 @@
 | `frame_id`, `source_path` | 프레임 식별자, `robot` / `mobile_pc_replay` / `mobile_device`; 원래 수집 경로도 별도 기록 |
 | `provenance` | `real` / `synthetic`, 출처·장비 모델·원본 경로·원본 파일 SHA-256; 합성이라면 생성 조건·seed |
 | `depth` | 정규화된 H×W 실수 배열, 단위 m. 원본 dtype·해상도·깊이 스케일·원본 invalid 규칙 보존. 무효값은 별도 boolean `valid_mask`로 표시하고 계산에서 제외 |
+| `valid_mask` | Depth와 같은 H×W boolean 배열. true인 위치만 유효점으로 계산; 무효칸의 수치 자체를 유효 깊이로 해석하지 않음 |
 | `depth_semantics` | 코어 입력은 광축 Z. 광선 거리 입력은 해당 보정 모델에 근거한 변환이 승인된 adapter만 허용; 단순 단위 변환으로 Z 취급 금지 |
 | `intrinsics` | 해당 Depth 해상도의 `width,height,fx,fy,cx,cy`, 픽셀 단위. 깊이 카메라 보정 출처·보정 시각·왜곡 모델/계수·정류 여부 기록 |
 | `timestamp` | `capture_ns`, `clock_domain`, `origin`(sensor/host/synthetic), 누락이면 null. 파일 재생 시각은 `replay_ns`로 분리 |
@@ -18,7 +19,8 @@
 | `sync` | `verified` / `unverified` / `missing`, offset·불확실도·측정 근거. 자세와 프레임 시각이 있다는 이유만으로 verified 금지 |
 | `capture_conditions` | 촬영 거리·노출 등 가용 메타데이터, 알 수 없으면 null. 촬영 환경·대상 식별자 기록 |
 | `target_mask` | null 또는 H×W boolean 마스크, 생성/라벨 출처와 버전. ROI만으로 배경이 완전히 분리됐다고 간주하지 않음 |
-| `support_plane` | null 또는 카메라 좌표계에서 단위 법선 `normal`과 거리 `offset_m`, 추정/측정 근거·오차. 자세 없이 임의 world 평면 생성 금지 |
+| `support_plane` | null 또는 카메라 좌표계에서 단위 법선 `normal`과 평면식 `normal·p + offset_m = 0`의 부호 있는 offset(m), 추정/측정 근거·오차. 자세 없이 임의 world 평면 생성 금지 |
+| `volume_request` | 부피 미요청이면 null. 요청 시 `method`와 방법별 조건 입력을 명시. 높이 적분 후보에는 `plane_basis,footprint,grid,assumptions_confirmed` 필요. ADE-51 승인 전 제안 확장 필드 |
 
 `fx,fy > 0`, 모든 내부 파라미터는 finite, 해상도와 배열·마스크 형상은 일치해야 한다. 단위·depth semantics·보정 상태가 알려지지 않으면 추측하지 않고 실패한다. 원본 깊이 0/sentinel/NaN/Inf의 의미는 원본 스키마로 명시해야 한다. 정규화 후 mask=true인 깊이는 finite하고 0보다 커야 한다. 측정 유효 범위는 장비와 촬영 조건에 따라 승인된 설정으로 받는다.
 
@@ -40,10 +42,10 @@
 
 출력 필드: `schema_version,frame_id,source_path,status,stage,volume,point_cloud,quality,errors,warnings,processing_config`.
 
-- `status`: `success` / `failure`. 입력 변환 성공과 부피 계산 성공을 별도 stage로 구분한다.
+- `status`: `success` / `failure`, 요청한 처리 단계 전체의 성공 여부. `stage`는 완료한 최종 요청 단계 또는 실패 단계. 요청 단계는 호출 설정에 별도 명시하는 제안이며 입력 변환 성공만으로 부피 요청 전체를 success로 처리하지 않는다.
 - `volume`: 성공 시 `{value,unit:"m3",method,assumptions}`; 부피 계산 미요청 또는 실패 시 null. `volume: 0`으로 실패를 숨기지 않는다.
 - `point_cloud`: 계산 완료 시 좌표계·단위·점 수·저장 경로 또는 배열 참조. 점 수는 부피가 아니다.
-- `quality`: 입력/유효/대상 점 수, invalid 비율, 관측 coverage, 평면·시간 보정 상태, 샘플 provenance. “관측 범위 내 추정”과 실측 정확도 평가를 구분한다.
+- `quality`: 입력/유효/대상 점 수, invalid 비율, 관측 coverage, 평면·시간 보정 상태. `quality.provenance`는 입력 `provenance` 객체를 보존하며 문자열 축약으로 출처 정보를 없애지 않는다. “관측 범위 내 추정”과 실측 정확도 평가를 구분한다.
 - `errors`: `{code,field,message}` 목록. CLI가 구현되면 실패 시 0이 아닌 종료 코드와 이 구조를 제안한다.
 - `processing_config`: 필터·분리·적분 파라미터, 코드/스키마 버전, 입력 checksum. 재현 가능한 동일 설정을 보존한다.
 
@@ -57,10 +59,13 @@
 | 보정 경로 미지원 | `CALIBRATION_UNSUPPORTED` |
 | 단계 필수 시각·자세·동기화 누락 | `TIMESTAMP_REQUIRED` / `POSE_REQUIRED` / `SYNC_UNVERIFIED` |
 | 마스크·평면·관측 범위·부피 가정 미충족 | `TARGET_UNAVAILABLE` / `SUPPORT_PLANE_REQUIRED` / `INSUFFICIENT_COVERAGE` / `VOLUME_ASSUMPTION_VIOLATED` |
+| 높이 적분의 footprint 누락·basis 오류·비양수 결과 | `FOOTPRINT_REQUIRED` / `PLANE_BASIS_INVALID` / `VOLUME_NONPOSITIVE` (ADE-55 방법 확장 제안) |
 
 ## 문서용 입출력 예제 (합성, 실행 안 함)
 
-이 예제는 측정 데이터나 승인된 정상 샘플이 아니다. ADE-51의 기준/예측 중량(g) 필드는 향후 상위 데이터 구조에서 연결할 위치를 확인해야 하며, 본 모듈은 중량을 계산하지 않는다.
+이 예제는 측정 데이터나 승인된 정상 샘플이 아니다. 첫 JSON은 **adapter에 전달할 원본 입력 일부**이며 정규화된 공통 입력이 아니다. `raw_depth/raw_unit/depth_scale_m/raw_invalid_values`는 원본 변환 정보다. 공통 입력에는 변환 후 `depth`(m)·`valid_mask` 및 보존 메타데이터가 들어간다. 둘째 JSON은 부피 요청 실패의 출력 일부다. 두 예제 모두 전체 required 필드를 확정한 완전한 스키마 fixture가 아니다.
+
+ADE-51의 기준/예측 중량(g) 필드는 향후 상위 데이터 구조에서 연결할 위치를 확인해야 하며, 본 모듈은 중량을 계산하지 않는다.
 
 ```json
 {

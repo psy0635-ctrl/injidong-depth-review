@@ -2,9 +2,11 @@
 
 제목: `docs(ADE-54): PC Depth 입력 설계와 공통 규격 검토안`
 
-현재 작업 폴더는 커밋·remote·구현이 없는 초기 Git 저장소이며 ADE-51 승인 규격을 확인하지 못했다. PC 저장 프레임 재생 및 공통 입력 변환 착수 전에 검토할 환경 정의, 제안 스키마, 실패 정책, 검증 계획, 실기기 연결 체크리스트를 문서화한다.
+직전 조사 시작 당시 폴더에는 커밋·remote·팀 구현이 없었다. 이후 검토 문서 로컬 커밋을 만들었으며 현재도 공식 팀 저장소 URL·기본 브랜치·ADE-51 승인 규격은 미확인이다. PC 저장 프레임 재생 및 공통 입력 변환 착수 전에 검토할 환경 정의, 제안 스키마, 실패 정책, 검증 계획, 실기기 연결 체크리스트를 문서화한다.
 
-변경: `repository-audit.md`, `common-contract-proposal.md`, `ade-54-input-design.md`, 이 PR 초안. SDK/API·변환 코드는 구현하지 않았다. Orbbec Astra Mini/Mini Pro 사용자 전달 정보와 Linear의 RealSense 기록 차이를 명시했다.
+원래 ADE-54 브랜치의 변경: `repository-audit.md`, `common-contract-proposal.md`, `ade-54-input-design.md`, 이 PR 초안의 4개 문서. 팀 저장소 이관 시 공통 계약·조사·검증 기록은 기존 문서가 있으면 해당 문서에 필요한 변경만 통합하고 중복 파일을 만들지 않는다. 공통 계약은 ADE-51 팀장 검토 대상이며 ADE-54 승인 규격으로 취급하지 않는다. SDK/API·변환 코드는 구현하지 않았다. Orbbec Astra Mini/Mini Pro 사용자 전달 정보와 Linear의 RealSense 기록 차이를 명시했다.
+
+이번 이관 준비 변경은 별도 로컬 브랜치에 있으며 원래 ADE-54 커밋을 수정하지 않았다. 예정 문서/PR 분담은 조사 문서의 이관 표를 따른다. 이 초안 파일은 검토 메모이므로 팀 저장소에 별도 파일로 복사할 필요 없이 향후 PR 본문 작성에 사용할 수 있다.
 
 검증: Git/파일 조사, Linear ADE-51·54·55/프로젝트 읽기 조회, 현재 Python의 설치 패키지 metadata 확인. 문서 예제 JSON의 구문 확인과 `git diff --check` 결과는 작업 보고에서 기록한다. 프레임 재생·실기기·시간 동기화 테스트는 규격/승인/샘플 부재로 미실행이다.
 

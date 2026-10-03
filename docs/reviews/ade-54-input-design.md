@@ -2,6 +2,8 @@
 
 상태: **제안 / 강석현 착수 검토 대기**. 승인 근거는 [착수 조사](repository-audit.md)에 정리했으며 현재 발견하지 못했다. 구현·장비 연결·재생 테스트는 아직 수행하지 않았다.
 
+문서 이관 준비: 현재 작업 폴더는 팀 코드 저장소로 확인되지 않은 로컬 문서 저장소다. 공식 URL·기본 브랜치 확인 후 별도 clone에서 기존 팀 입력 형식·규칙에 맞춰 이 문서를 수정한다. 아래 환경·포맷·검증 계획은 학교 PC의 미push 코드나 실제 저장소 구현을 확인한 결과가 아니다.
+
 ## 환경 정의
 
 제안: “PC 가상환경”은 Windows PC에서 격리한 Python `.venv`와 저장 Depth 프레임 재생 경로를 의미한다. OS 가상머신·Android 에뮬레이터·휴대폰 USB 연결을 의미하는지는 확인 필요다. 현재 호스트 Python은 3.11.15이나 팀 지원 버전과 SDK 호환성은 미확정이다.
@@ -18,6 +20,8 @@
 실제 입력 형식은 **미확인**이다. 제안 저장 교환 형식은 `manifest.json` + 프레임별 `.npy` H×W 수치 배열이다. 원본 저장 포맷이 확보되면 우선 재사용한다. `.npz`·SDK 녹화 포맷·PNG·RGB·disparity는 명시적 변환 경로가 승인되지 않으면 지원한다고 표시하지 않는다. NumPy를 채택할 경우 object 배열/pickle 로딩은 허용하지 않는 방식을 제안한다.
 
 manifest에는 frame 순서, 배열 파일, dtype/해상도, unit/scale/invalid 규칙, intrinsics 및 보정 상태, 촬영 시각과 clock domain, source/provenance, 선택적 pose/IMU를 포함한다. 스키마는 [공통 규격 제안](common-contract-proposal.md)을 따른다.
+
+원본 manifest와 adapter 정규화 출력의 필드는 구분한다. 공통 문서의 `raw_depth` JSON은 원본 예시 일부이며, 실행 모듈이 출력한 공통 `depth` 배열 예제로 보고하지 않는다. `volume_request`는 ADE-55 단계의 선택적 요청이므로 ADE-54 읽기·변환 성공에 footprint나 부피 방법을 필수로 요구하지 않는다.
 
 장비 adapter와 파일 replay adapter를 분리한다. 장비 없는 실행은 저장 샘플만 사용한다. 실제 샘플이 없으면 별도 synthetic 폴더에 생성 근거·seed·기대값을 기록하고 계산 계약만 검증한다. 문서의 합성 배열 예시는 재생 가능한 샘플 파일로 만들어진 상태가 아니다.
 

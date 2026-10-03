@@ -2,6 +2,8 @@
 
 일자: 2026-10-03 (Asia/Seoul). 이 기록은 착수 조사·설계 문서 검사이며 ADE-54 재생 테스트 로그나 ADE-55 계산 테스트 결과가 아니다.
 
+아래 최초 조사/검사 기록은 직전 문서 작성 단계의 결과다. 이번 문서 이관 준비 결과는 마지막 절에 구분해 기록했다.
+
 ## 실행한 조사와 결과
 
 | 명령/조회 | 결과 |
@@ -69,3 +71,28 @@ JSON 검사는 줄 시작의 JSON 코드 블록만 읽으며 실행 모듈을 �
 | 실제 장비 부피 정확도 / 중량 오차 10% | 미평가: 기준 실측·모델·평가 자료 없음; 부피 모듈 테스트로 중량 목표를 주장하지 않음 |
 
 push·PR 생성·Linear 댓글/상태 변경·팀장 메시지·최종 병합은 수행하지 않았다.
+
+## 이번 이관 준비 검증
+
+공식 저장소 URL·기본 브랜치를 확인할 수 없어 clone·팀 코드/AGENTS.md 조사·실제 이관은 미실행이다. 현재 폴더와 부모 경로에는 적용 AGENTS.md가 없었다. 학교 PC의 미push 파일은 접근/제공되지 않아 확인하지 못했다. 연결 조회 범위와 결과는 `repository-audit.md` 6절을 따른다.
+
+문서 7개를 읽고 원본/정규화 예제, 부피 요청 필드·출처·오류 코드, 초기 상태 표현과 브랜치 분담을 검토·수정했다. 문서 수를 늘리지 않았다. 위 Python 문서 검사와 `git diff --check`, stage 이후 `git diff --cached --check`를 실행해 통과했다. JSON 구문 검사는 계약 승인이나 계산 테스트를 대신하지 않는다.
+
+원본 보존 검증 명령:
+
+```powershell
+git rev-parse codex/ade-54-input-design-review
+git rev-parse codex/ade-55-common-module-design-review
+git merge-base codex/ade-54-input-design-review codex/ade-55-common-module-design-review
+git ls-tree -r --name-only 4d695b2a965eca0dc04d2c317938df5083ae955d -- docs/reviews
+git diff 4d695b2a965eca0dc04d2c317938df5083ae955d --name-status
+```
+
+실제 확인: 원래 ADE-54/ADE-55 refs는 각각 `85beaeaba68496026e8c105bd9cfbc3d0c006363`, `4d695b2a965eca0dc04d2c317938df5083ae955d`; merge-base는 ADE-54 커밋. 원본 ADE-55 tree의 문서 7개는 `git cat-file`로 존재를 확인했고 이번 diff는 그 문서의 수정(M)만 포함했다. branch ref·파일 수·변경 범위를 Python에서 assertion으로 확인했다. 최종 후속 커밋은 이번 최종 보고에 기록한다.
+
+```text
+PASS: 7 Markdown files, 3 JSON examples, 4 relative file links
+PASS: both original branch refs and all 7 committed original documents preserved; only 7 Markdown files modified
+```
+
+문서 계산 예제는 여전히 미실행 합성 기대값이다. 장비·SDK·촬영 시각 동기화·실제 휴대폰 연결·부피 정확도·중량 오차 평가는 추가로 실행하거나 완료 처리하지 않았다.

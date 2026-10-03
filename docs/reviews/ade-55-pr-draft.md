@@ -6,6 +6,10 @@
 
 선행 문서: 로컬 ADE-54 설계 브랜치의 공통 규격·착수 조사. 이 브랜치는 그 로컬 문서 커밋에서 분기했으며 ADE-55 변경 diff는 `git diff codex/ade-54-input-design-review...codex/ade-55-common-module-design-review`로 확인한다. 실제 remote/base/팀 기준 커밋은 확인 필요다.
 
+위 diff는 **보존한 원래 브랜치 간 변경**이다. 이번 이관 준비 수정본은 `codex/ade-54-ade-55-migration-review`에 별도로 있다. 원래 ADE-55는 ADE-54 대비 `ade-55-common-module-design.md`, 이 PR 초안, `validation-record.md`의 3개만 추가했다. 팀 저장소에서는 ADE-54 공통 문서가 선행 반영된 경우 ADE-55에서 재추가하지 않고 방법별 변경만 검토한다. 독립 PR이 필요하면 공유 규격 문서를 한 경로에서만 관리하도록 팀장과 기준 브랜치를 확정한다. 공통 계약 변경의 승인 주체는 ADE-51이다.
+
+이 PR 초안은 검토 메모이며 팀 저장소에 중복 복사하기보다 향후 PR 본문에 활용한다. 학교 PC의 미push 변경은 원격 clone으로 볼 수 없으므로 팀원이 제공한 파일·브랜치·커밋의 범위를 별도로 기록해야 한다.
+
 검증: 문서·링크·JSON 구문·diff 검사 결과를 `validation-record.md`에 기록한다. 전처리·Point Cloud·부피 계산·재현성 테스트와 실제 로봇/모바일 샘플 테스트는 구현 승인 및 데이터 부재로 미실행이다. 합성 기준 부피 수치는 실행 결과가 아니다.
 
 검토 요청: ADE-51 계약, 시간/자세 필수 정책, 장비 결정, 지지 평면/footprint 높이 적분의 허용 범위·실패 조건, 검증 데이터와 허용 오차. 본 PR 초안은 문서 검토 목적이며 ADE-55 완료·장비 정확도·중량 목표 달성을 주장하지 않는다. push·PR 생성·Linear 변경·승인 전 통합 없음.
